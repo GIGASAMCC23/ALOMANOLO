@@ -128,7 +128,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5fb300ea883d0a047bed835d32731826, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlanetInteraction
-  planetName: Saturn
+  planetName: Saturno
   interactionDistance: 1
 --- !u!4 &2755600331720868921 stripped
 Transform:
@@ -233,7 +233,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5fb300ea883d0a047bed835d32731826, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlanetInteraction
-  planetName: Mars
+  planetName: Marte
   interactionDistance: 1
 --- !u!1001 &5921939140220787609
 PrefabInstance:
@@ -428,7 +428,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5fb300ea883d0a047bed835d32731826, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlanetInteraction
-  planetName: Jupiter
+  planetName: "J\xFApiter"
   interactionDistance: 1
 --- !u!4 &6565537348315275773 stripped
 Transform:
