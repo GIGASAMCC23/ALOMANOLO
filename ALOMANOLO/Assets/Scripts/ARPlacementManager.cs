@@ -8,45 +8,114 @@ public class ARPlacementManager : MonoBehaviour
 {
     [Header("Referencias")]
     [SerializeField] private ARRaycastManager raycastManager;
+    [SerializeField] private ARPlaneManager planeManager;
     [SerializeField] private GameObject planetSystemPrefab;
 
     private GameObject spawnedPlanetSystem;
 
-    private readonly List<ARRaycastHit> hits = new List<ARRaycastHit>();
+    private readonly List<ARRaycastHit> hits =
+        new List<ARRaycastHit>();
+
+    private void Start()
+    {
+        ShowPlaneVisuals();
+    }
 
     private void Update()
     {
-        // Si los planetas ya fueron colocados, no hacemos nada más.
         if (spawnedPlanetSystem != null)
             return;
 
-        // Verificamos que exista una pantalla táctil.
         if (Touchscreen.current == null)
             return;
 
-        // Solo actuamos cuando el usuario toca la pantalla.
         if (!Touchscreen.current.primaryTouch.press.wasPressedThisFrame)
             return;
 
-        // Obtenemos la posición del dedo en la pantalla.
         Vector2 touchPosition =
             Touchscreen.current.primaryTouch.position.ReadValue();
 
-        // Lanzamos un Raycast hacia los planos detectados.
         if (raycastManager.Raycast(
             touchPosition,
             hits,
             TrackableType.PlaneWithinPolygon))
         {
-            // Obtenemos la posición encontrada en el mundo AR.
             Pose hitPose = hits[0].pose;
 
-            // Creamos nuestro sistema de planetas en esa posición.
             spawnedPlanetSystem = Instantiate(
                 planetSystemPrefab,
                 hitPose.position,
                 hitPose.rotation
             );
+
+            HidePlaneVisuals();
         }
     }
+
+    private void HidePlaneVisuals()
+    {
+        if (planeManager == null)
+            return;
+
+        foreach (ARPlane plane in planeManager.trackables)
+        {
+            ARPlaneMeshVisualizer visualizer =
+                plane.GetComponent<ARPlaneMeshVisualizer>();
+
+            if (visualizer != null)
+            {
+                visualizer.enabled = false;
+            }
+
+            MeshRenderer meshRenderer =
+                plane.GetComponent<MeshRenderer>();
+
+            if (meshRenderer != null)
+            {
+                meshRenderer.enabled = false;
+            }
+
+            LineRenderer lineRenderer =
+                plane.GetComponent<LineRenderer>();
+
+            if (lineRenderer != null)
+            {
+                lineRenderer.enabled = false;
+            }
+        }
+    }
+
+    private void ShowPlaneVisuals()
+    {
+        if (planeManager == null)
+            return;
+
+        foreach (ARPlane plane in planeManager.trackables)
+        {
+            ARPlaneMeshVisualizer visualizer =
+                plane.GetComponent<ARPlaneMeshVisualizer>();
+
+            if (visualizer != null)
+            {
+                visualizer.enabled = true;
+            }
+
+            MeshRenderer meshRenderer =
+                plane.GetComponent<MeshRenderer>();
+
+            if (meshRenderer != null)
+            {
+                meshRenderer.enabled = true;
+            }
+
+            LineRenderer lineRenderer =
+                plane.GetComponent<LineRenderer>();
+
+            if (lineRenderer != null)
+            {
+                lineRenderer.enabled = true;
+            }
+        }
+    }
+
 }

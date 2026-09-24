@@ -192,6 +192,7 @@ MonoBehaviour:
   marsInterior: {fileID: 1725749075}
   jupiterInterior: {fileID: 96276487}
   saturnInterior: {fileID: 1222109386}
+  fadeDuration: 0.6
 --- !u!114 &133600919
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1110,6 +1111,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ARPlacementManager
   raycastManager: {fileID: 2018626936}
+  planeManager: {fileID: 2018626937}
   planetSystemPrefab: {fileID: 1291605988703207170, guid: 4ba9593315acab84ea47b646e700ec94, type: 3}
 --- !u!1 &922091945
 GameObject:

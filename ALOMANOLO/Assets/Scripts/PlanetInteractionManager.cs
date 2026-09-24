@@ -1,5 +1,6 @@
 using UnityEngine;
 using TMPro;
+using System.Collections;
 
 public class PlanetInteractionManager : MonoBehaviour
 {
@@ -20,10 +21,18 @@ public class PlanetInteractionManager : MonoBehaviour
     [SerializeField] private GameObject jupiterInterior;
     [SerializeField] private GameObject saturnInterior;
 
+    [Header("Transición")]
+    [SerializeField] private float fadeDuration = 0.6f;
+
     private PlanetInteraction currentPlanet;
     private float nextCheckTime;
 
     private GameObject currentInterior;
+
+    private Renderer[] planetRenderers;
+
+    private CanvasGroup fadeCanvas;
+    private bool isTransitioning;
 
     private void Start()
     {
@@ -34,13 +43,15 @@ public class PlanetInteractionManager : MonoBehaviour
 
         if (exitPlanetButton != null)
             exitPlanetButton.SetActive(false);
+
+        CachePlanetRenderers();
+
+        CreateFadeCanvas();
     }
 
     private void Update()
     {
-        // Si estamos dentro de un planeta, no buscamos
-        // planetas exteriores.
-        if (currentInterior != null)
+        if (currentInterior != null || isTransitioning)
             return;
 
         if (Time.time < nextCheckTime)
@@ -49,6 +60,15 @@ public class PlanetInteractionManager : MonoBehaviour
         nextCheckTime = Time.time + checkInterval;
 
         FindClosestPlanet();
+    }
+
+    private void CachePlanetRenderers()
+    {
+        if (planetSystem == null)
+            return;
+
+        planetRenderers =
+            planetSystem.GetComponentsInChildren<Renderer>(true);
     }
 
     private void FindClosestPlanet()
@@ -120,15 +140,23 @@ public class PlanetInteractionManager : MonoBehaviour
 
     public void EnterCurrentPlanet()
     {
-        if (currentPlanet == null)
+        if (currentPlanet == null || isTransitioning)
             return;
+
+        StartCoroutine(EnterPlanetTransition());
+    }
+
+    private IEnumerator EnterPlanetTransition()
+    {
+        isTransitioning = true;
 
         Camera mainCamera = Camera.main;
 
         if (mainCamera == null)
         {
             Debug.LogWarning("No se encontró la Main Camera.");
-            return;
+            isTransitioning = false;
+            yield break;
         }
 
         string planetName =
@@ -140,7 +168,8 @@ public class PlanetInteractionManager : MonoBehaviour
         {
             selectedInterior = venusInterior;
         }
-        else if (planetName == "marte" || planetName == "mars")
+        else if (planetName == "marte" ||
+                 planetName == "mars")
         {
             selectedInterior = marsInterior;
         }
@@ -162,30 +191,24 @@ public class PlanetInteractionManager : MonoBehaviour
                 currentPlanet.PlanetName
             );
 
-            return;
+            isTransitioning = false;
+            yield break;
         }
 
-        // Ocultamos el sistema exterior.
-        if (planetSystem != null)
-        {
-            planetSystem.SetActive(false);
-        }
+        HideEnterButton();
 
-        // Ocultamos cualquier interior anterior.
+        yield return StartCoroutine(Fade(1f));
+
+        HidePlanetSystemVisuals();
+
         HideAllInteriors();
 
-        // Colocamos el centro del interior
-        // exactamente donde está la cámara.
         selectedInterior.transform.position =
             mainCamera.transform.position;
 
-        // Activamos el interior 360.
         selectedInterior.SetActive(true);
 
         currentInterior = selectedInterior;
-
-        // Cambiamos los botones.
-        HideEnterButton();
 
         if (exitPlanetButton != null)
             exitPlanetButton.SetActive(true);
@@ -194,29 +217,64 @@ public class PlanetInteractionManager : MonoBehaviour
             "Entrando al interior de " +
             currentPlanet.PlanetName
         );
+
+        yield return StartCoroutine(Fade(0f));
+
+        isTransitioning = false;
     }
 
     public void ExitCurrentPlanet()
     {
-        if (currentInterior == null)
+        if (currentInterior == null || isTransitioning)
             return;
 
-        // Apagamos el interior 360.
+        StartCoroutine(ExitPlanetTransition());
+    }
+
+    private IEnumerator ExitPlanetTransition()
+    {
+        isTransitioning = true;
+
+        yield return StartCoroutine(Fade(1f));
+
         currentInterior.SetActive(false);
 
         currentInterior = null;
 
-        // Volvemos a mostrar los planetas.
-        if (planetSystem != null)
-        {
-            planetSystem.SetActive(true);
-        }
+        ShowPlanetSystemVisuals();
 
-        // Ocultamos el botón de salir.
         if (exitPlanetButton != null)
             exitPlanetButton.SetActive(false);
 
+        yield return StartCoroutine(Fade(0f));
+
+        isTransitioning = false;
+
         Debug.Log("Saliendo del interior del planeta.");
+    }
+
+    private void HidePlanetSystemVisuals()
+    {
+        if (planetRenderers == null)
+            return;
+
+        foreach (Renderer renderer in planetRenderers)
+        {
+            if (renderer != null)
+                renderer.enabled = false;
+        }
+    }
+
+    private void ShowPlanetSystemVisuals()
+    {
+        if (planetRenderers == null)
+            return;
+
+        foreach (Renderer renderer in planetRenderers)
+        {
+            if (renderer != null)
+                renderer.enabled = true;
+        }
     }
 
     private void HideAllInteriors()
@@ -235,4 +293,71 @@ public class PlanetInteractionManager : MonoBehaviour
 
         currentInterior = null;
     }
+
+    private void CreateFadeCanvas()
+    {
+        GameObject fadeObject =
+            new GameObject("AR Fade");
+
+        Canvas canvas =
+            fadeObject.AddComponent<Canvas>();
+
+        canvas.renderMode =
+            RenderMode.ScreenSpaceOverlay;
+
+        canvas.sortingOrder = 999;
+
+        UnityEngine.UI.Image image =
+            fadeObject.AddComponent<UnityEngine.UI.Image>();
+
+        image.color = Color.black;
+
+        RectTransform rect =
+            fadeObject.GetComponent<RectTransform>();
+
+        rect.anchorMin = Vector2.zero;
+        rect.anchorMax = Vector2.one;
+        rect.offsetMin = Vector2.zero;
+        rect.offsetMax = Vector2.zero;
+
+        fadeCanvas =
+            fadeObject.AddComponent<CanvasGroup>();
+
+        fadeCanvas.alpha = 0f;
+        fadeCanvas.blocksRaycasts = false;
+        fadeCanvas.interactable = false;
+    }
+
+    private IEnumerator Fade(float targetAlpha)
+    {
+        if (fadeCanvas == null)
+            yield break;
+
+        float startAlpha =
+            fadeCanvas.alpha;
+
+        float elapsed = 0f;
+
+        while (elapsed < fadeDuration)
+        {
+            elapsed += Time.deltaTime;
+
+            float t =
+                Mathf.Clamp01(
+                    elapsed / fadeDuration
+                );
+
+            fadeCanvas.alpha =
+                Mathf.Lerp(
+                    startAlpha,
+                    targetAlpha,
+                    t
+                );
+
+            yield return null;
+        }
+
+        fadeCanvas.alpha = targetAlpha;
+    }
+
 }
