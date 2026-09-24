@@ -44,9 +44,14 @@ public class PlanetInteractionManager : MonoBehaviour
         if (exitPlanetButton != null)
             exitPlanetButton.SetActive(false);
 
-        CachePlanetRenderers();
-
         CreateFadeCanvas();
+    }
+
+    public void SetPlanetSystem(GameObject system)
+    {
+        planetSystem = system;
+
+        CachePlanetRenderers();
     }
 
     private void Update()
@@ -213,11 +218,6 @@ public class PlanetInteractionManager : MonoBehaviour
         if (exitPlanetButton != null)
             exitPlanetButton.SetActive(true);
 
-        Debug.Log(
-            "Entrando al interior de " +
-            currentPlanet.PlanetName
-        );
-
         yield return StartCoroutine(Fade(0f));
 
         isTransitioning = false;
@@ -249,8 +249,6 @@ public class PlanetInteractionManager : MonoBehaviour
         yield return StartCoroutine(Fade(0f));
 
         isTransitioning = false;
-
-        Debug.Log("Saliendo del interior del planeta.");
     }
 
     private void HidePlanetSystemVisuals()

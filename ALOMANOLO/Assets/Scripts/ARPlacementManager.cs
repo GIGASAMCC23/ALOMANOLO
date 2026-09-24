@@ -48,6 +48,16 @@ public class ARPlacementManager : MonoBehaviour
                 hitPose.rotation
             );
 
+            PlanetInteractionManager interactionManager =
+                FindFirstObjectByType<PlanetInteractionManager>();
+
+            if (interactionManager != null)
+            {
+                interactionManager.SetPlanetSystem(
+                    spawnedPlanetSystem
+                );
+            }
+
             HidePlaneVisuals();
         }
     }
