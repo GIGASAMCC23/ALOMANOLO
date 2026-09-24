@@ -1,6 +1,7 @@
 using UnityEngine;
 using TMPro;
 using System.Collections;
+using System.Collections.Generic;
 
 public class PlanetInteractionManager : MonoBehaviour
 {
@@ -25,13 +26,16 @@ public class PlanetInteractionManager : MonoBehaviour
     [SerializeField] private float fadeDuration = 0.6f;
 
     private PlanetInteraction currentPlanet;
-    private float nextCheckTime;
-
     private GameObject currentInterior;
+
+    private float nextCheckTime;
 
     private CanvasGroup fadeCanvas;
 
     private bool isTransitioning;
+
+    private readonly List<GameObject> exteriorPlanets =
+        new List<GameObject>();
 
     private void Start()
     {
@@ -49,11 +53,21 @@ public class PlanetInteractionManager : MonoBehaviour
     public void SetPlanetSystem(GameObject system)
     {
         planetSystem = system;
+
+        CacheExteriorPlanets();
+
+        Debug.Log(
+            "Sistema de planetas recibido. Planetas encontrados: " +
+            exteriorPlanets.Count
+        );
     }
 
     private void Update()
     {
-        if (currentInterior != null || isTransitioning)
+        if (currentInterior != null)
+            return;
+
+        if (isTransitioning)
             return;
 
         if (Time.time < nextCheckTime)
@@ -65,11 +79,52 @@ public class PlanetInteractionManager : MonoBehaviour
         FindClosestPlanet();
     }
 
+    private void CacheExteriorPlanets()
+    {
+        exteriorPlanets.Clear();
+
+        if (planetSystem == null)
+            return;
+
+        PlanetInteraction[] planets =
+            planetSystem.GetComponentsInChildren<PlanetInteraction>(
+                true
+            );
+
+        foreach (PlanetInteraction planet in planets)
+        {
+            Transform planetRoot =
+                planet.transform;
+
+            while (
+                planetRoot.parent != null &&
+                planetRoot.parent != planetSystem.transform)
+            {
+                planetRoot =
+                    planetRoot.parent;
+            }
+
+            GameObject rootObject =
+                planetRoot.gameObject;
+
+            if (!exteriorPlanets.Contains(rootObject))
+            {
+                exteriorPlanets.Add(rootObject);
+            }
+        }
+    }
+
     private void FindClosestPlanet()
     {
+        if (planetSystem == null)
+        {
+            HideEnterButton();
+            return;
+        }
+
         PlanetInteraction[] planets =
-            FindObjectsByType<PlanetInteraction>(
-                FindObjectsSortMode.None
+            planetSystem.GetComponentsInChildren<PlanetInteraction>(
+                true
             );
 
         PlanetInteraction closestPlanet = null;
@@ -88,6 +143,9 @@ public class PlanetInteractionManager : MonoBehaviour
 
         foreach (PlanetInteraction planet in planets)
         {
+            if (!planet.gameObject.activeInHierarchy)
+                continue;
+
             if (!planet.IsPlayerNear())
                 continue;
 
@@ -217,12 +275,9 @@ public class PlanetInteractionManager : MonoBehaviour
             Fade(1f)
         );
 
-        HideAllInteriors();
+        HideExteriorPlanets();
 
-        if (planetSystem != null)
-        {
-            planetSystem.SetActive(false);
-        }
+        HideAllInteriors();
 
         selectedInterior.transform.position =
             mainCamera.transform.position;
@@ -233,9 +288,7 @@ public class PlanetInteractionManager : MonoBehaviour
             selectedInterior;
 
         if (exitPlanetButton != null)
-        {
             exitPlanetButton.SetActive(true);
-        }
 
         yield return StartCoroutine(
             Fade(0f)
@@ -275,20 +328,15 @@ public class PlanetInteractionManager : MonoBehaviour
         currentInterior =
             null;
 
-        if (planetSystem != null)
-        {
-            planetSystem.SetActive(true);
-        }
-
-        if (exitPlanetButton != null)
-        {
-            exitPlanetButton.SetActive(false);
-        }
+        ShowExteriorPlanets();
 
         currentPlanet =
             null;
 
         HideEnterButton();
+
+        if (exitPlanetButton != null)
+            exitPlanetButton.SetActive(false);
 
         yield return StartCoroutine(
             Fade(0f)
@@ -298,6 +346,39 @@ public class PlanetInteractionManager : MonoBehaviour
 
         Debug.Log(
             "Saliendo del interior del planeta."
+        );
+    }
+
+    private void HideExteriorPlanets()
+    {
+        if (exteriorPlanets.Count == 0)
+        {
+            CacheExteriorPlanets();
+        }
+
+        foreach (GameObject planet in exteriorPlanets)
+        {
+            if (planet != null)
+                planet.SetActive(false);
+        }
+
+        Debug.Log(
+            "Planetas exteriores ocultados: " +
+            exteriorPlanets.Count
+        );
+    }
+
+    private void ShowExteriorPlanets()
+    {
+        foreach (GameObject planet in exteriorPlanets)
+        {
+            if (planet != null)
+                planet.SetActive(true);
+        }
+
+        Debug.Log(
+            "Planetas exteriores mostrados: " +
+            exteriorPlanets.Count
         );
     }
 

@@ -69,14 +69,10 @@ public class ARPlacementManager : MonoBehaviour
         planeDetectionFinished = false;
 
         if (planeManager != null)
-        {
             planeManager.enabled = true;
-        }
 
         if (raycastManager != null)
-        {
             raycastManager.enabled = true;
-        }
 
         ShowPlaneVisuals();
     }
@@ -88,14 +84,10 @@ public class ARPlacementManager : MonoBehaviour
         HidePlaneVisuals();
 
         if (planeManager != null)
-        {
             planeManager.enabled = false;
-        }
 
         if (raycastManager != null)
-        {
             raycastManager.enabled = false;
-        }
 
         Debug.Log("Detección de plano finalizada.");
     }
@@ -111,25 +103,19 @@ public class ARPlacementManager : MonoBehaviour
                 plane.GetComponent<ARPlaneMeshVisualizer>();
 
             if (visualizer != null)
-            {
                 visualizer.enabled = false;
-            }
 
             MeshRenderer meshRenderer =
                 plane.GetComponent<MeshRenderer>();
 
             if (meshRenderer != null)
-            {
                 meshRenderer.enabled = false;
-            }
 
             LineRenderer lineRenderer =
                 plane.GetComponent<LineRenderer>();
 
             if (lineRenderer != null)
-            {
                 lineRenderer.enabled = false;
-            }
         }
     }
 
@@ -144,25 +130,19 @@ public class ARPlacementManager : MonoBehaviour
                 plane.GetComponent<ARPlaneMeshVisualizer>();
 
             if (visualizer != null)
-            {
                 visualizer.enabled = true;
-            }
 
             MeshRenderer meshRenderer =
                 plane.GetComponent<MeshRenderer>();
 
             if (meshRenderer != null)
-            {
                 meshRenderer.enabled = true;
-            }
 
             LineRenderer lineRenderer =
                 plane.GetComponent<LineRenderer>();
 
             if (lineRenderer != null)
-            {
                 lineRenderer.enabled = true;
-            }
         }
     }
 
