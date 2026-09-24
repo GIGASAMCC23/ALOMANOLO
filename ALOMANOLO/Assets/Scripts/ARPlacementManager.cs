@@ -16,14 +16,16 @@ public class ARPlacementManager : MonoBehaviour
     private readonly List<ARRaycastHit> hits =
         new List<ARRaycastHit>();
 
+    private bool planeDetectionFinished = false;
+
     private void Start()
     {
-        ShowPlaneVisuals();
+        StartPlaneDetection();
     }
 
     private void Update()
     {
-        if (spawnedPlanetSystem != null)
+        if (planeDetectionFinished)
             return;
 
         if (Touchscreen.current == null)
@@ -58,8 +60,44 @@ public class ARPlacementManager : MonoBehaviour
                 );
             }
 
-            HidePlaneVisuals();
+            FinishPlaneDetection();
         }
+    }
+
+    private void StartPlaneDetection()
+    {
+        planeDetectionFinished = false;
+
+        if (planeManager != null)
+        {
+            planeManager.enabled = true;
+        }
+
+        if (raycastManager != null)
+        {
+            raycastManager.enabled = true;
+        }
+
+        ShowPlaneVisuals();
+    }
+
+    private void FinishPlaneDetection()
+    {
+        planeDetectionFinished = true;
+
+        HidePlaneVisuals();
+
+        if (planeManager != null)
+        {
+            planeManager.enabled = false;
+        }
+
+        if (raycastManager != null)
+        {
+            raycastManager.enabled = false;
+        }
+
+        Debug.Log("Detección de plano finalizada.");
     }
 
     private void HidePlaneVisuals()
